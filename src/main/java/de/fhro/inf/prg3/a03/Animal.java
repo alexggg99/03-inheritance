@@ -3,9 +3,9 @@ package de.fhro.inf.prg3.a03;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-
-import static de.fhro.inf.prg3.a03.Animal.State.*;
+import java.util.List;
 
 /**
  * @author Peter Kurfer
@@ -15,16 +15,15 @@ public class Animal {
 
 	private static final Logger logger = LogManager.getLogger();
 
-	public enum State {SLEEPING, HUNGRY, DIGESTING, PLAYFUL, DEAD}
-
-	private State state = State.SLEEPING;
-
 	// state durations (set via constructor), ie. the number of ticks in each state
-	private final int sleep;
-	private final int awake;
-	private final int digest;
 
 	private final String name;
+	private State currentState;
+
+	// state durations (set via constructor), ie. the number of ticks in each state
+    private final int sleep;
+    private final int awake;
+    private final int digest;
 
 	// money you make, when people watch your animal
 	private final int collectionAmount;
@@ -33,7 +32,6 @@ public class Animal {
 	// those species this animal likes to eat
 	private final GenusSpecies[] devours;
 
-	private int time = 0;
 	private int timeSinceFeed;
 
 	public Animal(GenusSpecies genusSpecies, String name, GenusSpecies[] devours, int sleep, int awake, int digest, int collectionAmount) {
@@ -44,59 +42,22 @@ public class Animal {
 		this.awake = awake;
 		this.digest = digest;
 		this.collectionAmount = collectionAmount;
-
+		this.currentState = new SleepingState(sleep, this);
 		Arrays.sort(this.devours);
 	}
 
 	public void tick(){
 		logger.info("tick()");
-		time++;
-		switch (state) {
-			case SLEEPING:
-				if (time == sleep) {
-					logger.info("Yoan... getting hungry!");
-					state = HUNGRY;
-					time = 0;
-				}
-				break;
-			case HUNGRY:
-				if(time == awake){
-					logger.info("I've starved for a too long time...good bye...");
-					state = DEAD;
-				}
-				break;
-			case DIGESTING:
-				if (++timeSinceFeed == digest) {
-					logger.info("Getting in a playful mood!");
-					state = PLAYFUL;
-					timeSinceFeed = 0;
-				}
-				break;
-			case PLAYFUL:
-				if (time == awake) {
-					logger.info("Yoan... getting tired!");
-					state = SLEEPING;
-					time = 0;
-				}
-				break;
-
-			case DEAD:
-				break;
-			default:
-				throw new IllegalStateException("Unknown cat state " + state.name());
-		}
-
-		logger.info(state.name());
-
+		this.currentState = currentState.tick();
+		logger.info(currentState.getClass().getName());
 	}
 
 	public void feed(){
-		if (!state.equals(State.HUNGRY))
+		if (!isHungry())
 			throw new IllegalStateException("Can't stuff a cat...");
-
 		logger.info("You feed the cat...");
-		time = 0;
-		state = State.DIGESTING;
+		HungryState hungryState = (HungryState) currentState;
+		currentState = hungryState.feed();
 
 	}
 
@@ -116,22 +77,34 @@ public class Animal {
 	}
 
 	public boolean isAsleep() {
-		return state.equals(State.SLEEPING);
+		return currentState instanceof SleepingState;
 	}
 
 	public boolean isPlayful() {
-		return state.equals(State.PLAYFUL);
+		return currentState instanceof PayfullState;
 	}
 
 	public boolean isHungry() {
-		return state.equals(State.HUNGRY);
+		return currentState instanceof HungryState;
 	}
 
 	public boolean isDigesting() {
-		return state.equals(State.DIGESTING);
+		return currentState instanceof DigestingState;
 	}
 
 	public boolean isDead() {
-		return state == State.DEAD;
+		return currentState instanceof SleepingState;
+	}
+
+	public int getSleep() {
+		return sleep;
+	}
+
+	public int getAwake() {
+		return awake;
+	}
+
+	public int getDigest() {
+		return digest;
 	}
 }

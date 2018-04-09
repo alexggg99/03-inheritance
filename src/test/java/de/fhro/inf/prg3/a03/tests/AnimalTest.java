@@ -1,7 +1,6 @@
 package de.fhro.inf.prg3.a03.tests;
 
-import de.fhro.inf.prg3.a03.Animal;
-import de.fhro.inf.prg3.a03.GenusSpecies;
+import de.fhro.inf.prg3.a03.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class AnimalTest {
 
 	private static final int Sleep = 10;
-	private static final int Awake = 15;
+	private static final int Awake = 16;
 	private static final int Digest = 10;
 
 	private Animal animal;
